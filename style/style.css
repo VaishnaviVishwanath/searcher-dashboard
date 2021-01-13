@@ -23,6 +23,7 @@
         margin-top: 50px; 
     }
     .test-container{
+      margin-left: 120px;
         position: relative;
     }
     .result-container{
@@ -143,4 +144,8 @@ hr {
   .cancelbtn, .signupbtn {
      width: 100%;
   }
+}
+
+.MuiDrawer-paperAnchorDockedLeft{
+  padding-top: 100px;
 }

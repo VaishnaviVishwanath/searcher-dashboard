@@ -5,12 +5,12 @@ import { createStore, applyMiddleware } from 'redux';
 
 // import App from './components/app';
 import reducers from './reducers';
-import TestContainer from './containers/TestContainer'
+import Dashboard from './containers/DashboardContainer'
 const createStoreWithMiddleware = applyMiddleware()(createStore);
 
 
 ReactDOM.render(
   <Provider store={createStoreWithMiddleware(reducers)}>
-    <TestContainer />
+    <Dashboard />
   </Provider>
   , document.querySelector('.container'));

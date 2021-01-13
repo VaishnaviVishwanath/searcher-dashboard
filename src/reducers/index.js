@@ -1,10 +1,9 @@
 import {combineReducers} from 'redux'
-import {testContentReducer,questionAttempt,userDataReducer} from './testReducers'
+import {testContentReducer,questionAttempt,userDataReducer,indicesReducer} from './testReducers'
 
 const rootReducer = combineReducers({
-    testContent:testContentReducer,
-    attempts:questionAttempt,
-    userData:userDataReducer
+    userData:userDataReducer,
+    indices:indicesReducer
 })
 
 export default rootReducer

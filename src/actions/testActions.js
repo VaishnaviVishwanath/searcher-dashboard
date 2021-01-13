@@ -2,26 +2,13 @@
  * with fields type and payload */
 import {testContent} from '../Data'
 import {actions} from '../constants'
-export function setTestContent(testContent){
-     return{
-         type:actions.FETCH_TEST_CONTENT,
-         payload:testContent
-     }  
+export function setIndices(indices){
+    return {
+        type:actions.SET_INDICES,
+        payload:indices
+    }
 }
 
-export function setQuestionOption(qId,attemptObj){
-    return {
-        type:actions.SET_QUESTION_ATTEMPT,
-        payload:{
-            [qId]:attemptObj
-        }
-    } 
-}
-export function resetAttempts(){
-    return {
-        type:actions.RESET_ATTEMPTS
-    } 
-}
 
 export function setUserData(data){
     return {

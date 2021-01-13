@@ -3,12 +3,12 @@ const FORM_TYPE_SIGN_UP="signup"
 const FORM_TYPE_LOG_IN="login"
 import axios from 'axios'
 import Button from '@material-ui/core/Button';
-
+import {SERVER_URL_SEARCHER} from '../../containers/DashboardContainer' 
 
 class LoginSignup extends Component{
    constructor(props){
       super(props)
-      this.state={formType:FORM_TYPE_SIGN_UP,email:null,userName:null,password:null}
+      this.state={formType:FORM_TYPE_SIGN_UP,email:null,plan:null,password:null}
    }   
    
    Handlers = {
@@ -21,13 +21,13 @@ class LoginSignup extends Component{
           this.setState({[field]:value})
       },
       handleSubmit:async()=>{
-          let serverUrl=`http://localhost:4000/`
+          let serverUrl=SERVER_URL_SEARCHER
           let api
           if(this.state.formType===FORM_TYPE_LOG_IN){
-             api='loginUser'
+             api='/auth/login'
           }
           else{
-             api='signupUser'
+             api='/auth/signup'
           }
           let url=serverUrl+api
           let params={}
@@ -38,10 +38,10 @@ class LoginSignup extends Component{
          else{
             params['email']=this.state.email
             params['password']=this.state.password
-            params['userName']=this.state.userName  
-            params['grade'] = this.state.grade
-            params['target'] = this.state.target 
-            if(!params['email']|| !params['password'] || !params['userName'] || !params['grade'] || !params['target']){
+            params['plan']=this.state.plan  
+            // params['grade'] = this.state.grade
+            // params['target'] = this.state.target 
+            if(!params['email']|| !params['password'] || !params['plan']){
                alert(`required field is missing`);
             return
             }
@@ -50,6 +50,7 @@ class LoginSignup extends Component{
          }  
          try{
             let result = await axios.post(url,params)
+            console.log("===debug===result",result);
             if(result.status===200){
                 alert(`${this.state.formType===FORM_TYPE_LOG_IN?"login":"signup"} successful`);
                 this.props.setUser(result.data)
@@ -67,19 +68,15 @@ class LoginSignup extends Component{
         renderLoginButton:()=>{
           return(<div style={{paddingTop:"20px",paddingBottom:"20px",width:"30%"}}>
           <Button variant="contained" color="default" onClick={this.Handlers.handleLoginClick}>
-          {`${this.state.formType===FORM_TYPE_LOG_IN?"Sign up":"Log in"}`}
+          {`${this.state.formType===FORM_TYPE_LOG_IN?"Go to Sign up screen":"Go to Log in screen   "}`}
           </Button>
       </div>)
         },
         renderSignUpFields:()=>{
            return(
               <React.Fragment>
-              <label for="psw-repeat"><b>User Name</b></label>
-              <input type="text" placeholder="User name" name="userName" value = {this.state['userName']} onChange={(e)=>this.Handlers.setUserInput('userName',e)} required />
-              <label for="psw-repeat"><b>Target</b></label>
-              <input type="text" placeholder="Target (ex- IIT-JEE)" name="target" value = {this.state['target']} onChange={(e)=>this.Handlers.setUserInput('target',e)} required />
-              <label for="psw-repeat"><b>Grade</b></label>
-              <input type="number" placeholder="Grade" name="grade" value = {this.state['grade']} onChange={(e)=>this.Handlers.setUserInput('grade',e)} required />
+              <label for="psw-repeat"><b>Plan</b></label>
+              <input type="text" placeholder="Plan" name="plan" value = {this.state['plan']} onChange={(e)=>this.Handlers.setUserInput('plan',e)} required />
               </React.Fragment>
            )
         }
