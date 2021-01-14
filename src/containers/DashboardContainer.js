@@ -13,6 +13,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
 import TextareaAutosize from '@material-ui/core/TextareaAutosize';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import dateFormat from 'dateformat';
 
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
@@ -83,6 +84,56 @@ class Dashboard extends Component{
       };
     };
     Handlers={
+      handleReportFetch:async()=>{
+         //TODO: make two fetch reports calls
+         //TODO:fetch dbName for appId.
+         //todo: make new api call.
+
+         const urlAppIdToDb = `${SERVER_URL_SEARCHER}/getDbForAppId`
+         const {userData} = this.props 
+         const params = {
+          appId:userData.appId
+          }
+         let result = await axios.get(urlAppIdToDb,{params})
+         if(result && result.data){
+           const dbForAppId=result.data
+           this.setState({dbForAppId})
+           const urlPopuplarQuery = `${SERVER_URL_ANALYZER}/reports/getPopularQueries`
+           const urlNoResultQuery = `${SERVER_URL_ANALYZER}/reports/noResultQueries`
+           const timeLimits = this.state.timeLimits;
+
+           const {start,end} = timeLimits
+           const startTime = new Date(start)
+           const endTime = new Date(end); 
+           let formattedStartDate = dateFormat(startTime,"mmm dd, yyyy, hh:MM:ss TT")
+           let formattedEndDate = dateFormat(endTime,"mmm dd, yyyy, hh:MM:ss TT")
+           let params={
+            "dbName":dbForAppId,
+            "index":this.state.selectedIndice,
+            "limit":50,
+            "eventCategory":"query_info",
+            "eventLabel":"search_result",
+            "startTs":formattedStartDate,
+            "endTs":formattedEndDate
+           }
+           const resultPopularQuery = await axios.post(urlPopuplarQuery,params)
+           const resultNoResult = await axios.post(urlNoResultQuery,params)
+           if(resultPopularQuery && resultPopularQuery.data){
+              this.setState({popularQueryReport:resultPopularQuery.data})
+           }
+           if(resultNoResult && resultNoResult.data){
+            this.setState({noResultReport:resultNoResult.data})
+         }
+          }
+      },
+      
+      handleDateTimePick:(e,time)=>{
+        let timeVal=e.target.value
+        let timeLimits = this.state.timeLimits?this.state.timeLimits:{}
+        timeLimits[time]=timeVal
+        this.setState({timeLimits})
+        
+      },
       querify:this.debounce(async(query) => {
 
         const url =`${SERVER_URL_SEARCHER}/query`
@@ -191,6 +242,9 @@ class Dashboard extends Component{
                 this.setState({allFieldsForSelectedIndice:data})
               }
              break;    
+            //  case "analyzeQueries":
+              //  this.setState({timeLimits:{},popularQueryReport:{},noResultReport:{}})
+
           }}
       },
       handleIndiceChange:(e)=>{
@@ -215,7 +269,9 @@ class Dashboard extends Component{
         }
       },
       handleSideMenuSelect:(menuItem)=>{
-         this.setState({selectedMenuItem:menuItem})
+         this.setState({selectedMenuItem:menuItem},()=>{
+           this.setState({selectedIndice:null})
+         })
       },
         setUser:(userData)=>{
             this.props.setUserData(userData)
@@ -255,6 +311,86 @@ class Dashboard extends Component{
 
     
     Renderers={
+      renderAnalyzerSection:()=>{
+        const elements=[]
+        if(this.state.selectedIndice){
+             elements.push(<div style={{padding:"20px",display:"flex"}}><label for="birthdaytime">Start Time for reports (date and time):</label>
+             <input type="datetime-local" onChange={(e)=>this.Handlers.handleDateTimePick(e,'start')} id="birthdaytime" name="birthdaytime" />
+             </div>)
+             elements.push(<div style={{display:"flex",padding:"20px"}}><label for="birthdaytime">End Time for reports  (date and time):</label>
+  <input type="datetime-local" id="birthdaytime" onChange={(e)=>this.Handlers.handleDateTimePick(e,'end')} name="birthdaytime" />
+  </div>)
+        }
+        if(this.state.timeLimits && this.state.timeLimits.start && this.state.timeLimits.end){
+          elements.push(<div style={{width:"150px"}}><Button variant="contained" color="primary" onClick={this.Handlers.handleReportFetch}>
+          Fetch reports
+        </Button></div>)
+        }
+        
+        if(this.state.popularQueryReport && this.state.popularQueryReport.popularQueries){
+          // console.log("====debug===popular query report",this.state.popularQueryReport)
+          const {popularQueries} = this.state.popularQueryReport
+          const tableRows = [];
+          for(let queryElement of popularQueries){
+            tableRows.push(<tr>
+              <td>
+                {queryElement.query}
+              </td>
+              <td>
+                {queryElement.count}
+              </td>
+            </tr>)
+          }
+          
+          elements.push(<div style = {{padding:"30px"}}>
+ <Typography variant="h5" gutterBottom>
+       Most popular queries and their count.
+ </Typography>
+ <table>
+  <tr>
+    <th>Query</th>
+    <th>Count</th>
+  </tr>
+  {tableRows}
+  </table>
+
+
+          </div>)
+       
+        }
+        if(this.state.noResultReport && this.state.noResultReport.noResultQueries){
+          const {noResultQueries} = this.state.noResultReport
+          const tableRows = [];
+          for(let queryElement of noResultQueries){
+            tableRows.push(<tr>
+              <td>
+                {queryElement.query}
+              </td>
+              <td>
+                {queryElement.count}
+              </td>
+            </tr>)
+          }
+          
+          elements.push(<div style={{padding:"30px"}}>
+ <Typography variant="h5" gutterBottom>
+       Most fired queries with no result
+ </Typography>
+ <table>
+  <tr>
+    <th>Query</th>
+    <th>Count</th>
+  </tr>
+  {tableRows}
+  </table>
+
+
+          </div>)
+       
+        }
+
+        return elements;
+      },
       renderCTAs:()=>{
         if(this.state.selectedMenuItem){
           const {name}=this.state.selectedMenuItem
@@ -454,6 +590,9 @@ class Dashboard extends Component{
                 break;
               case `searchDemo`:
                 mainElement.push(this.Renderers.renderSearchSection()); 
+                break;
+              case `analyzeQueries`:
+                mainElement.push(this.Renderers.renderAnalyzerSection())
                 break;
               }
          }
